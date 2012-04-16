@@ -79,6 +79,110 @@ module SpreadBase
         @data.slice!( row_index )
       end
 
+      # row_data          row_data format
+      # index             [rows number] can be higher than rows number - in this case, the space will be filled
+      #                   with unstyled empty rows.
+      #
+      def insert_row( row_data, index=@data.size )
+        row_style, row_values = normalize_row_data( row_data )
+
+        # Extend number of columns column_values with null styles, if required
+        #
+        @column_styles[ @row_values.size - 1 ] = nil if @column_styles.size < @row_values.size
+
+        ( @data.size ... index ).each do | filling_index |
+          @data[ filling_index ] = [ nil ]
+        end
+
+        @data.insert( index, [ row_style, row_values ] )
+      end
+
+      # column_index      zero-based. returns nil if the index is greater than the
+      #                   number of columns.
+      #
+      def column( column_index )
+        raw_values = @data.map { | row_data | row_data[ column_index + 1 ] || [] ) }
+
+        raw_values.map { | raw_value | raw_value.first }
+      end
+
+      def delete_column( column_index )
+        @column_styles.slice!( column_index )
+
+        @data.each do | row_data |
+          row_data.slice!( column_index + 1 )
+        end
+      end
+
+      # column_data       use row_data format. if the number 
+      # index             [rows number] can be higher than columns number - in this case, the space will be filled
+      #                   with unstyled empty columns.
+      #
+      def insert_column( column_data, index=@columns.size )
+        raise "if the values are more than the rows!!!!"
+
+        column_style, column_values = normalize_row_data( column_data )
+
+        @column_styles.insert( index, column_style )
+
+        # Extend column_values with null values, if required
+        #
+        column_values[ @data.size - 1 ] = nil if column_values.size < @data.size
+
+        # At this point, column_values can only be as long or longer than @data
+        #
+        column_values.zip( @data ).each do | value, row_data |
+          if row_data.nil?
+            # @columns_styles.size +1 (style) and -1 (it's a pre-insertion row)
+            #
+            row_data = [ nil ] * @column_styles.size
+
+            @data << row_data
+          end
+
+          row_data.insert( index + 1, value )
+        end
+      end
+
+      def data
+        ( 0 ... @data.size ).map do | row_index |
+          row( row_index )
+        end
+      end
+
+      def column_style( column_index )
+        @column_styles[ column_index ]
+      end
+
+      def row_style( row_index )
+        @data[ row_index ][ 0 ]
+      end
+
+      def cell_style( column_index, row_index )
+        @data[ row_index ][ column_index + 1 ][ 1 ]
+      end
+
+      def set_column_style( style, column_index )
+        raise "Off-limit index for column style: #{ column_index }" if column_index >= @column_styles.size
+
+        @column_styles[ column_index ] = style
+      end
+
+      def set_row_style( style, row_index )
+        raise "Off-limit index for row style: #{ row_index }" if row_index >= @data.size
+
+        @data[ row_index ][ 0 ] = style
+      end
+
+      def set_cell_style( style, column_index, row_index )
+        raise "Off-limit row index for cell style: #{ row_index }"       if row_index >= @data.size
+        raise "Off-limit column index for cell style: #{ column_index }" if column_index >= @column_styles.size
+
+        row_style, row_data = @data[ row_index ]
+
+        row_style[ column_index + 1 ][ 1 ] = style
+      end
+
       private
 
       def normalize_row_data( row_data )

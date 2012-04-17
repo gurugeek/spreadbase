@@ -18,8 +18,7 @@ with SpreadBase.  If not, see <http://www.gnu.org/licenses/>.
 
 require File.expand_path( '../../document_file',     __FILE__ )
 require File.expand_path( '../../elements/document', __FILE__ )
-require File.expand_path( '../date_style',           __FILE__ )
-require File.expand_path( '../text_style',           __FILE__ )
+require File.expand_path( '../style',                __FILE__ )
 require File.expand_path( '../table',                __FILE__ )
 
 module SpreadBase

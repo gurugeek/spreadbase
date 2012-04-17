@@ -28,7 +28,7 @@ module SpreadBase
     class Style
 
       def initialize( name, attributes )
-        raise "wm!"
+        raise "wm!" unless attributes[ :test ]
       end
 
       def self.from_raw_style( raw_style )

@@ -19,16 +19,14 @@ with SpreadBase.  If not, see <http://www.gnu.org/licenses/>.
 require File.expand_path( '../../elements/date_style', __FILE__ )
 require File.expand_path( '../../elements/style',      __FILE__ )
 
+require 'date'
+require 'time'
+
 module SpreadBase
 
   module SimpleAccessLayer
 
     class Table
-
-      A_ORD = 'A'.ord
-      J_ORD = 'J'.ord
-      K_ORD = 'K'.ord
-      Z_ORD = 'Z'.ord
 
       attr_accessor :name
 
@@ -52,15 +50,15 @@ module SpreadBase
       #
       # Maledetta primavera!!
       #
-      def []( row, column_identifier )
+      def []( column_identifier, row )
         column = decode_column_identifier( column_identifier )
 
-        value, style = @data[ column, row ]
+        value, style = @data[ row ][ column + 1 ]
 
         value
       end
 
-      def []=( row, column_identifier, raw_value )
+      def []=( column_identifier, row, raw_value )
         column       = decode_column_identifier( column_identifier )
         value, style = decode_raw_value( raw_value )
 
@@ -101,7 +99,7 @@ module SpreadBase
       #                   number of columns.
       #
       def column( column_index )
-        raw_values = @data.map { | row_data | row_data[ column_index + 1 ] || [] ) }
+        raw_values = @data.map { | row_data | row_data[ column_index + 1 ] || [] }
 
         raw_values.map { | raw_value | raw_value.first }
       end
@@ -189,7 +187,7 @@ module SpreadBase
         style    = row_data.shift if row_data.first.is_a?( Style )
         row_data = row_data.map { | raw_value | decode_raw_value( raw_value ) }
 
-        [ style, row_data ]
+        [ style, *row_data ]
       end
 
       # Algorithm for the lulz!!
@@ -197,44 +195,45 @@ module SpreadBase
       # Rideraaaaaaaa rideraaaaaaaaaaaaa rideraaaaaaaaaaaaaaaaa tu falla ridereeeeeeeeeee percheeeeeeeeeeeeeeeeeeeeee
       #
       def decode_column_identifier( column_identifier )
-        return column_identifier.to_i if column_identifier =~ /^\d+$/
+        return column_identifier if column_identifier.is_a?( Fixnum )
 
         normalized_form = ''
-        
+
         column_identifier.chars do | letteronza |
           ascii_ord = letteronza.upcase.ord
 
           case ascii_ord
-          when A_ORD .. J_ORD
-            normalized_form << ( ascii_ord - A_ORD ).chr
-          when K_ORD .. Z_ORD
-            normalized_form << ( 10 + ascii_ord - K_ORD ).chr
+          when 'A'.ord .. 'J'.ord
+            normalized_form << ( '0'.ord + ascii_ord - 'A'.ord ).chr
+          when 'K'.ord .. 'Z'.ord
+            normalized_form << ( 'A'.ord + ascii_ord - 'K'.ord ).chr
           else
             raise( "You're going to turn into a plant and fed to the goblins if you don't specify a valid column identifier: #{ letters }" )
           end
         end
+
+        normalized_form.to_i( 27 )
       end
 
-      normalized_form.to_i( 27 )
-    end
+      def decode_raw_value( raw_value )
+        if raw_value.is_a?( Array )
+          raise "Howard the duck is coming to rescue your invalid value: #{ raw_value } - only <value>/[<value>, <style>] are allowed." unless raw_value.size == 2 && raw_value[ 1 ].is_a?( Style )
 
-    def decode_raw_value( raw_value )
-      if raw_value.is_a?( Array )
-        raise "Howard the duck is coming to rescue your invalid value: #{ raw_value } - only <value>/[<value>, <style>] are allowed." unless raw_value.size == 2 && raw_value[ 1 ].is_a?( Style )
+          value, style = raw_value
+        else
+          value = raw_value
+        end
 
-        value, style = raw_value
-      else
-        value = raw_value
+        case value
+        when Date, Time, DateTime, Float, Fixnum, String, nil
+          # attaboy!!
+        else
+          raise "Unexpected data type: #{ value.class }. Macarena is a tramp."
+        end
+
+        [ value, style ]
       end
 
-      case value
-      when Date, Time, DateTime, Float, Fixnum, String, nil
-        # attaboy!!
-      else
-        raise "Unexpected data type: #{ value.class }. Macarena is a tramp."
-      end
-
-      [ value, style ]
     end
 
   end

@@ -36,7 +36,9 @@ describe SpreadBase::SimpleAccessLayer::Table do
     @style_2 = SAL::Style.new( 'enrico!',  :test => true )
     @style_3 = SAL::Style.new( 'mixy!',    :test => true )
     @style_4 = SAL::Style.new( 'KARAOKE',    :test => true )
+  end
 
+  before :each do
     @table = SAL::Table.new(
       'largo al factotum!!', [ @style_1, nil ],
 
@@ -64,10 +66,10 @@ describe SpreadBase::SimpleAccessLayer::Table do
   end
 
   it "should access a cell (CASE 2: Literal column identifier)" do
-    @table[  9, 0 ].should == 'ju-jitsu'
-    @table[ 10, 0 ].should == 'krasto'
-    @table[ 25, 0 ].should == 'zuzzurellone'
-    @table[ 26, 0 ].should == 'a-ha!!'
+    @table[  9, 0 ] = 'ju-jitsu'
+    @table[ 10, 0 ] = 'krasto'
+    @table[ 25, 0 ] = 'zuzzurellone'
+    @table[ 26, 0 ] = 'a-ha!!'
 
     @table[  'a', 0 ].should == 1
     @table[  'B', 0 ].should == nil
@@ -77,7 +79,16 @@ describe SpreadBase::SimpleAccessLayer::Table do
     @table[ 'aa', 0 ].should == 'a-ha!!'
   end
 
-  it "should set a cell"
+  it "should set a cell" do
+    @table[ 'A', 0 ] = 10
+    @table[ 'B', 1 ] = [ 2, @style_1 ]
+
+    @table[ 'A', 0 ].should == 10
+    @table[ 'B', 1 ].should == 2
+
+    @table.cell_style( 'A', 0 ).should == nil
+    @table.cell_style( 'B', 1 ).should == @style_1
+  end
 
   it "should access a row"
 

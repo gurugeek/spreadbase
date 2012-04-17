@@ -50,19 +50,19 @@ module SpreadBase
       #
       # Maledetta primavera!!
       #
-      def []( column_identifier, row )
-        column = decode_column_identifier( column_identifier )
+      def []( column_identifier, row_index )
+        column_index = decode_column_identifier( column_identifier )
 
-        value, style = @data[ row ][ column + 1 ]
+        value, style = @data[ row_index ][ column_index + 1 ]
 
         value
       end
 
-      def []=( column_identifier, row, raw_value )
-        column       = decode_column_identifier( column_identifier )
+      def []=( column_identifier, row_index, raw_value )
+        column_index = decode_column_identifier( column_identifier )
         value, style = decode_raw_value( raw_value )
 
-        @data[ colun, row ] = [ value, style ]
+        @data[ row_index ][ column_index + 1 ] = [ value, style ]
       end
 
       # row_index         zero-based
@@ -148,7 +148,9 @@ module SpreadBase
         end
       end
 
-      def column_style( column_index )
+      def column_style( column_identifier )
+        column_index = decode_column_identifier( column_identifier )
+
         @column_styles[ column_index ]
       end
 
@@ -156,7 +158,9 @@ module SpreadBase
         @data[ row_index ][ 0 ]
       end
 
-      def cell_style( column_index, row_index )
+      def cell_style( column_identifier, row_index )
+        column_index = decode_column_identifier( column_identifier )
+
         @data[ row_index ][ column_index + 1 ][ 1 ]
       end
 
@@ -181,6 +185,13 @@ module SpreadBase
         row_style[ column_index + 1 ][ 1 ] = style
       end
 
+      def to_s
+        @data.inject( "" ) do | buffer, ( style, *row_values ) |
+
+          buffer << row_values.map { | raw_value | raw_value.first }.map { | value | value.inspect }.join( ', ' ) << "\n"
+        end
+      end
+
       private
 
       def normalize_row_data( row_data )
@@ -190,29 +201,26 @@ module SpreadBase
         [ style, *row_data ]
       end
 
-      # Algorithm for the lulz!!
+
+      # Accepts either an integer, or a MoFoBase26BisexNumber.
+      # Returns a 0-based decimal number.
       #
-      # Rideraaaaaaaa rideraaaaaaaaaaaaa rideraaaaaaaaaaaaaaaaa tu falla ridereeeeeeeeeee percheeeeeeeeeeeeeeeeeeeeee
+      # Motherf#### base-26 bijective numeration - I would have gladly saved my f* time. At least
+      # there were a few cute ladies at the Charleston lesson.
       #
       def decode_column_identifier( column_identifier )
         return column_identifier if column_identifier.is_a?( Fixnum )
 
-        normalized_form = ''
+        letters = column_identifier.upcase.chars.to_a
 
-        column_identifier.chars do | letteronza |
-          ascii_ord = letteronza.upcase.ord
+        raise "Invalid letter for in column identifier (allowed 'a/A' to 'z/Z')" if letters.any? { | letter | letter < 'A' || letter > 'Z' }
+        raise "Invalid literal column identifier (allowed 'A' to 'AMJ')" if letters.size == 0 || letters.size > 3
 
-          case ascii_ord
-          when 'A'.ord .. 'J'.ord
-            normalized_form << ( '0'.ord + ascii_ord - 'A'.ord ).chr
-          when 'K'.ord .. 'Z'.ord
-            normalized_form << ( 'A'.ord + ascii_ord - 'K'.ord ).chr
-          else
-            raise( "You're going to turn into a plant and fed to the goblins if you don't specify a valid column identifier: #{ letters }" )
-          end
-        end
+        base_10_value = letters.inject( 0 ) { | sum, letter | sum * 26 + ( letter.ord - 'A'.ord + 1 ) } - 1
 
-        normalized_form.to_i( 27 )
+        raise "The maximum allowed column identifier is 'AMJ'" if base_10_value > 1023
+
+        base_10_value
       end
 
       def decode_raw_value( raw_value )

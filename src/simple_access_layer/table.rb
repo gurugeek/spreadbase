@@ -34,7 +34,7 @@ module SpreadBase
       # :column_styles     optional
       # :row_data          see wiki for specification
       #
-      def initialize( name, column_styles, *rows_data )
+      def initialize( name, column_styles=[], *rows_data )
         raise "Name must be a non-empty string" if ( name || '' ) == ''
 
         @name          = name

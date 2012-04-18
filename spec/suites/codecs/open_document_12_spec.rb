@@ -74,6 +74,14 @@ module SpreadBase::Codecs::OpenDocument12SpecHelper
     SpreadBase::Codecs::OpenDocument12.new.encode( sample_document )
   end
 
+  # Watch out the #to_s - we want a string
+  #
+  def content_xml_from_sample_document
+    sample_document = create_sample_document
+
+    SpreadBase::Codecs::OpenDocument12.new.encode_document( sample_document ).to_s
+  end
+
   def assert_size( collection, expected_size )
     collection.size.should == expected_size
 
@@ -115,8 +123,6 @@ describe SpreadBase::Codecs::OpenDocument12 do
   end
 
   include SpreadBase::Codecs::OpenDocument12SpecHelper
-
-  it "should employ more data types in the main codec test: percentage, formula, ..."
 
   # :encode/:decode
   #
@@ -176,8 +182,26 @@ describe SpreadBase::Codecs::OpenDocument12 do
     end
   end
 
-  it "should encode the document with makeup (:prettify)"
+  # Not worth testing in detail
+  #
+  it "should encode the document with makeup (:prettify) - SMOKE" do
+    sample_document = create_sample_document
+    formatter       = REXML::Formatters::Pretty.new
 
-  it "should decode the sample document, directly from the content.xml content"
+    REXML::Formatters::Pretty.should_receive( :new ).and_return( formatter )
+
+    SpreadBase::Codecs::OpenDocument12.new.encode( sample_document, :prettify => true )
+  end
+
+  # Already tested by the main decoding test
+  #
+  it "should decode the sample document, directly from the content.xml content - SMOKE" do
+    content_xml = content_xml_from_sample_document
+
+    document = SpreadBase::Codecs::OpenDocument12.new.decode_content_xml( content_xml )
+
+    assert_size( document.styles, 2 )
+    assert_size( document.tables, 2 )
+  end
 
 end

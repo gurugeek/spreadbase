@@ -16,10 +16,11 @@ You should have received a copy of the GNU Lesser General Public License along
 with SpreadBase.  If not, see <http://www.gnu.org/licenses/>.
 =end
 
-require File.expand_path( '../../document_file',     __FILE__ )
-require File.expand_path( '../../elements/document', __FILE__ )
-require File.expand_path( '../style',                __FILE__ )
-require File.expand_path( '../table',                __FILE__ )
+require File.expand_path( '../../document_file',              __FILE__ )
+require File.expand_path( '../../codecs/open_document_12.rb', __FILE__ )
+require File.expand_path( '../../elements/document',          __FILE__ )
+require File.expand_path( '../style',                         __FILE__ )
+require File.expand_path( '../table',                         __FILE__ )
 
 module SpreadBase
 
@@ -29,6 +30,7 @@ module SpreadBase
     #
     class Document
 
+      DEFAULT_CODEC = Codecs::OpenDocument12 
       DEFAULT_TABLE_NAME = 'Sheet1'
 
       # Can be changed live.
@@ -40,19 +42,25 @@ module SpreadBase
       def initialize( document_path=nil )
         @document_path = document_path
 
-        if filename
+        if @document_path
           raw_document = SpreadBase::DocumentFile.open( document_path )
 
           @styles = raw_document.styles.map { | raw_style | Style.from_raw_style( raw_document, raw_style ) }
           @tables = raw_document.tables.map { | raw_table | Table.from_raw_table( raw_table ) }
         else
           @styles = []
-          @tables = [ Table.new( DEFAULT_TABLE_NAME ) ]
+          @tables = [ SimpleAccessLayer::Table.new( DEFAULT_TABLE_NAME ) ]
         end
       end
 
       def save
-        document_raw = DEFAULT_CODEC.new.encode( @document )
+        raise "Document path not specified" if @document_path.nil?
+
+        element_styles = @styles.map( &:to_element )
+        element_tables = @tables.map( &:to_element )
+
+        document     = Elements::Document.new( :styles => element_styles, :tables => element_tables )
+        document_raw = DEFAULT_CODEC.new.encode( document )
 
         IO.write( @document_path, document_raw )
       end

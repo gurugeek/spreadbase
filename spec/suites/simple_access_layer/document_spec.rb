@@ -21,10 +21,34 @@ require File.expand_path( '../../../../src/simple_access_layer/document',       
 
 describe SpreadBase::SimpleAccessLayer::Document do
 
-  it "should initialize without a file"
+  # See open_document_12_spec.rb
+  #
+  module SDL
+    Document = SpreadBase::SimpleAccessLayer::Document
+  end
 
-  it "should initialize from a file"
+  it "should initialize without a file" do
+    document = SDL::Document.new
 
-  it "should save"
+    document.tables.size.should == 1
+
+    document.tables.first.name.should == SDL::Document::DEFAULT_TABLE_NAME
+  end
+
+  # # Another annoying (not worth) to test in detail
+  # #
+  # it "should save - SMOKE" do
+  #   document = SDL::Document.new
+
+  #   document.document_path = '/tmp/abc.ods'
+
+  #   document.save
+  # end
+
+  it "should raise an error when trying to save without a filename" do
+    document = SDL::Document.new
+
+    lambda { document.save }.should raise_error( RuntimeError, "Document path not specified" )
+  end
 
 end

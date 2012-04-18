@@ -40,9 +40,10 @@ describe SpreadBase::SimpleAccessLayer::Table do
 
   before :each do
     @table = SAL::Table.new(
-      'largo al factotum!!', [ @style_1, nil ],
+      'largo al factotum!!',
+      [           @style_1,               nil  ],
 
-      [ @style_2, 1,                     nil   ],
+      [ @style_2, 1,                      nil  ],
       [ @style_3, [ Date.new, @style_4 ], 44.3 ],
     )
   end
@@ -66,17 +67,19 @@ describe SpreadBase::SimpleAccessLayer::Table do
   end
 
   it "should access a cell (CASE 2: Literal column identifier)" do
-    @table[  9, 0 ] = 'ju-jitsu'
-    @table[ 10, 0 ] = 'krasto'
-    @table[ 25, 0 ] = 'zuzzurellone'
-    @table[ 26, 0 ] = 'a-ha!!'
+    @table[  9,   0 ] = 'ju-jitsu'
+    @table[ 10,   0 ] = 'krasto'
+    @table[ 25,   0 ] = 'zuzzurellone'
+    @table[ 28,   0 ] = 'a-ha!!'
+    @table[ 1023, 0 ] = 'mieeeeezzega!!!'
 
-    @table[  'a', 0 ].should == 1
-    @table[  'B', 0 ].should == nil
-    @table[  'j', 0 ].should == 'ju-jitsu'
-    @table[  'k', 0 ].should == 'krasto'
-    @table[  'z', 0 ].should == 'zuzzurellone'
-    @table[ 'aa', 0 ].should == 'a-ha!!'
+    @table[  'a',  0 ].should == 1
+    @table[  'B',  0 ].should == nil
+    @table[  'j',  0 ].should == 'ju-jitsu'
+    @table[  'k',  0 ].should == 'krasto'
+    @table[  'z',  0 ].should == 'zuzzurellone'
+    @table[ 'ac',  0 ].should == 'a-ha!!'
+    @table[ 'AMJ', 0 ].should == 'mieeeeezzega!!!'
   end
 
   it "should set a cell" do
@@ -90,27 +93,54 @@ describe SpreadBase::SimpleAccessLayer::Table do
     @table.cell_style( 'B', 1 ).should == @style_1
   end
 
-  it "should access a row"
+  it "should access a row" do
+    @table.row( 0 ).should == [ 1,        nil  ]
+    @table.row( 1 ).should == [ Date.new, 44.3 ]
+  end
 
-  it "should delete a row"
+  it "should delete a row" do
+    @table.delete_row( 0 )
+
+    @table.row( 0 ).should == [ Date.new, 44.3 ]
+
+    @table.row_style( 0 ).should == @style_3
+  end
 
   it "should insert a row (CASE 1: equal/less values than the columns number)"
 
   it "should insert a row (CASE 2: more values than the columns number)"
 
-  it "should access a column"
+  it "should access a column" do
+    @table.column( 0 ).should == [ 1,   Date.new ]
+    @table.column( 1 ).should == [ nil, 44.3     ]
+  end
 
-  it "should delete a column"
+  it "should delete a column" do
+    @table.delete_column( 0 )
+
+    @table.column( 0 ).should == [ nil, 44.3 ]
+
+    @table.column_style( 0 ). should == nil
+  end
 
   it "should insert a column (CASE 1: equal/less values than the rows number)"
 
   it "should insert a column (CASE 2: more values than the rows number)"
 
-  it "should return a column style"
+  it "should return a column style" do
+    @table.column_style( 0 ).should == @style_1
+    @table.column_style( 1 ).should == nil
+  end
 
-  it "should return a row style"
+  it "should return a row style" do
+    @table.row_style( 0 ).should == @style_2
+    @table.row_style( 1 ).should == @style_3
+  end
 
-  it "should return a cell style"
+  it "should return a cell style" do
+    @table.cell_style( 0, 1 ).should == @style_4
+    @table.cell_style( 1, 1 ).should == nil
+  end
 
   it "should set a column style"
 

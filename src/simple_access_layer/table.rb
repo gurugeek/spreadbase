@@ -158,6 +158,8 @@ module SpreadBase
         @data[ row_index ][ 0 ]
       end
 
+      # WATCH OUT! There is no inheritance mechanism.
+      #
       def cell_style( column_identifier, row_index )
         column_index = decode_column_identifier( column_identifier )
 
